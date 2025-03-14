@@ -1,38 +1,43 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { login } from '../services/authService';
-import '../styles/Login.css';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login } from "../services/authService";
+import "../styles/Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
-      setError('Vui lòng nhập tên đăng nhập và mật khẩu');
+      setError("Vui lòng nhập tên đăng nhập và mật khẩu");
       return;
     }
-    
+
     setLoading(true);
-    setError('');
-    
+    setError("");
+
     try {
+      console.log("Bắt đầu đăng nhập với:", username);
       const response = await login(username, password);
-      
+
+      console.log("Kết quả đăng nhập:", response);
+
       if (response.success) {
-        navigate('/dashboard');
+        console.log("Đăng nhập thành công, chuyển hướng đến /dashboard");
+        navigate("/dashboard");
       } else {
-        setError(response.message || 'Đăng nhập thất bại');
+        console.log("Đăng nhập thất bại:", response.message);
+        setError(response.message || "Đăng nhập thất bại");
       }
     } catch (err) {
-      setError('Đã xảy ra lỗi khi đăng nhập');
-      console.error(err);
+      console.error("Lỗi đăng nhập:", err);
+      setError("Đã xảy ra lỗi khi đăng nhập");
     } finally {
       setLoading(false);
     }
@@ -42,11 +47,11 @@ const Login = () => {
     <div className="login-container">
       <div className="login-form-container">
         <img src="/logo.svg" alt="POS.VN Logo" className="login-logo" />
-        
+
         <h2>Đăng nhập</h2>
-        
+
         {error && <div className="login-error">{error}</div>}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Tên đăng nhập</label>
@@ -59,7 +64,7 @@ const Login = () => {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Mật khẩu</label>
             <input
@@ -71,26 +76,22 @@ const Login = () => {
               disabled={loading}
             />
           </div>
-          
+
           <div className="form-group remember-me">
-            <input 
-              type="checkbox" 
-              id="remember" 
+            <input
+              type="checkbox"
+              id="remember"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
             <label htmlFor="remember">Ghi nhớ đăng nhập</label>
           </div>
-          
-          <button 
-            type="submit" 
-            className="login-button"
-            disabled={loading}
-          >
-            {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
-        
+
         <div className="login-footer">
           <a href="#forgot-password">Quên mật khẩu?</a>
         </div>
@@ -99,4 +100,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;

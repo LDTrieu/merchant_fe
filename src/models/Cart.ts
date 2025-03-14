@@ -1,4 +1,4 @@
-import { Food } from './Food';
+import { Food } from "./Food";
 
 export interface CartItem {
   id: string;
@@ -13,7 +13,6 @@ export interface Cart {
   items: CartItem[];
   totalAmount: number;
   discount: number;
-  tax: number;
   finalAmount: number;
 }
 
@@ -22,4 +21,4 @@ export interface OrderForm {
   customerPhone?: string;
   paymentMethod: string;
   note?: string;
-} 
+}

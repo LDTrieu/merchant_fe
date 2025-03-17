@@ -1,38 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/layout/Layout';
-import { 
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-  Button, TextField, MenuItem, Select, FormControl, InputLabel, IconButton,
-  Chip, Box, Typography, Grid, InputAdornment, Pagination, Tooltip, CircularProgress
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import AddIcon from '@mui/icons-material/Add';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import { Food, FoodFilter } from '../../models/Food';
-import { getFoods, foodCategories } from '../../services/foodService';
-import '../../styles/FoodManagement.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../../components/layout/Layout";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  IconButton,
+  Chip,
+  Box,
+  Typography,
+  Grid,
+  InputAdornment,
+  Pagination,
+  Tooltip,
+  CircularProgress,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import AddIcon from "@mui/icons-material/Add";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { Food, FoodFilter } from "../../models/Food";
+import {
+  getFoods,
+  foodCategories,
+  sendMockFoodsToBackend,
+} from "../../services/foodService";
+import "../../styles/FoodManagement.css";
 
 const FoodManagement: React.FC = () => {
   const navigate = useNavigate();
   const [foods, setFoods] = useState<Food[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Phân trang
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
-  
+
   // Bộ lọc
   const [filter, setFilter] = useState<FoodFilter>({});
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [showFilters, setShowFilters] = useState<boolean>(false);
-  
+
+  // Thông báo
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   // Tải dữ liệu món ăn
   const loadFoods = async () => {
     setLoading(true);
@@ -42,91 +79,139 @@ const FoodManagement: React.FC = () => {
       setTotal(response.total);
       setError(null);
     } catch (err) {
-      setError('Không thể tải danh sách món ăn. Vui lòng thử lại sau.');
-      console.error('Error loading foods:', err);
+      setError("Không thể tải danh sách món ăn. Vui lòng thử lại sau.");
+      console.error("Error loading foods:", err);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Tải dữ liệu khi component mount hoặc khi các tham số thay đổi
   useEffect(() => {
     loadFoods();
   }, [page, limit, filter]);
-  
+
   // Xử lý thay đổi trang
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
     setPage(value);
   };
-  
+
   // Xử lý tìm kiếm
   const handleSearch = () => {
-    setFilter(prev => ({ ...prev, search: searchTerm }));
+    setFilter((prev) => ({ ...prev, search: searchTerm }));
     setPage(1);
   };
-  
+
   // Xử lý nhấn Enter khi tìm kiếm
   const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
-  
+
   // Xử lý thay đổi bộ lọc
   const handleFilterChange = (name: string, value: string) => {
-    setFilter(prev => ({ ...prev, [name]: value || undefined }));
+    setFilter((prev) => ({ ...prev, [name]: value || undefined }));
     setPage(1);
   };
-  
+
   // Xử lý xem chi tiết món ăn
   const handleView = (food: Food) => {
     navigate(`/foods/${food.id}`);
   };
-  
+
   // Xử lý chỉnh sửa món ăn
   const handleEdit = (food: Food) => {
     navigate(`/foods/${food.id}/edit`);
   };
-  
+
   // Xử lý xóa món ăn
   const handleDelete = (food: Food) => {
     // Trong thực tế, đây sẽ hiển thị hộp thoại xác nhận trước khi xóa
     if (window.confirm(`Bạn có chắc chắn muốn xóa món "${food.name}"?`)) {
       // Gọi API xóa món ăn
-      console.log('Deleting food:', food);
+      console.log("Deleting food:", food);
     }
   };
-  
+
   // Xử lý tạo món ăn mới
   const handleCreate = () => {
-    navigate('/foods/create');
+    navigate("/foods/create");
   };
-  
+
   // Xử lý xuất dữ liệu
   const handleExport = () => {
-    console.log('Exporting food data...');
+    console.log("Exporting food data...");
     // Trong thực tế, đây sẽ gọi API để xuất dữ liệu
   };
-  
+
+  // Xử lý gửi mock data về BE
+  const handleSendMockData = async () => {
+    if (
+      window.confirm("Bạn có chắc chắn muốn gửi dữ liệu mock về backend không?")
+    ) {
+      try {
+        setLoading(true);
+        const result = await sendMockFoodsToBackend();
+
+        if (result.success) {
+          setSnackbar({
+            open: true,
+            message: result.message,
+            severity: "success",
+          });
+          // Tải lại danh sách món ăn sau khi gửi thành công
+          loadFoods();
+        } else {
+          setSnackbar({
+            open: true,
+            message: result.message,
+            severity: "error",
+          });
+        }
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: "Đã xảy ra lỗi khi gửi dữ liệu mock",
+          severity: "error",
+        });
+        console.error("Error sending mock data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Đóng thông báo
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
   // Hiển thị trạng thái món ăn
   const renderStatus = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
+      case "ACTIVE":
         return <Chip label="Đang bán" color="success" size="small" />;
-      case 'OUT_OF_STOCK':
+      case "OUT_OF_STOCK":
         return <Chip label="Hết hàng" color="warning" size="small" />;
-      case 'INACTIVE':
+      case "INACTIVE":
         return <Chip label="Ngừng bán" color="error" size="small" />;
       default:
         return <Chip label={status} size="small" />;
     }
   };
-  
+
   // Format giá tiền
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
   };
-  
+
   return (
     <Layout>
       <div className="food-management-container">
@@ -139,20 +224,25 @@ const FoodManagement: React.FC = () => {
               variant="contained"
               color="primary"
               startIcon={<AddIcon />}
-              onClick={handleCreate}
-            >
+              onClick={handleCreate}>
               Thêm món ăn
             </Button>
             <Button
               variant="outlined"
               startIcon={<FileDownloadIcon />}
-              onClick={handleExport}
-            >
+              onClick={handleExport}>
               Xuất dữ liệu
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<CloudUploadIcon />}
+              onClick={handleSendMockData}>
+              Gửi Mock Data
             </Button>
           </div>
         </div>
-        
+
         <Paper className="food-management-filter-container">
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -179,22 +269,22 @@ const FoodManagement: React.FC = () => {
               <Button
                 variant="outlined"
                 startIcon={<FilterListIcon />}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Ẩn bộ lọc' : 'Hiển thị bộ lọc'}
+                onClick={() => setShowFilters(!showFilters)}>
+                {showFilters ? "Ẩn bộ lọc" : "Hiển thị bộ lọc"}
               </Button>
             </Grid>
-            
+
             {showFilters && (
               <>
                 <Grid item xs={12} md={6}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Loại món ăn</InputLabel>
                     <Select
-                      value={filter.category || ''}
+                      value={filter.category || ""}
                       label="Loại món ăn"
-                      onChange={(e) => handleFilterChange('category', e.target.value as string)}
-                    >
+                      onChange={(e) =>
+                        handleFilterChange("category", e.target.value as string)
+                      }>
                       <MenuItem value="">Tất cả</MenuItem>
                       {foodCategories.map((category) => (
                         <MenuItem key={category} value={category}>
@@ -208,10 +298,11 @@ const FoodManagement: React.FC = () => {
                   <FormControl fullWidth size="small">
                     <InputLabel>Trạng thái</InputLabel>
                     <Select
-                      value={filter.status || ''}
+                      value={filter.status || ""}
                       label="Trạng thái"
-                      onChange={(e) => handleFilterChange('status', e.target.value as any)}
-                    >
+                      onChange={(e) =>
+                        handleFilterChange("status", e.target.value as any)
+                      }>
                       <MenuItem value="">Tất cả</MenuItem>
                       <MenuItem value="ACTIVE">Đang bán</MenuItem>
                       <MenuItem value="OUT_OF_STOCK">Hết hàng</MenuItem>
@@ -223,7 +314,7 @@ const FoodManagement: React.FC = () => {
             )}
           </Grid>
         </Paper>
-        
+
         {loading ? (
           <div className="loading-container">
             <CircularProgress />
@@ -264,12 +355,16 @@ const FoodManagement: React.FC = () => {
                         <TableCell>{(page - 1) * limit + index + 1}</TableCell>
                         <TableCell>
                           <div className="food-image-container">
-                            <img 
-                              src={food.image || 'https://dummyimage.com/80x80/cccccc/ffffff&text=No+Image'} 
+                            <img
+                              src={
+                                food.image ||
+                                "https://dummyimage.com/80x80/cccccc/ffffff&text=No+Image"
+                              }
                               alt={food.name}
                               className="food-thumbnail"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://dummyimage.com/80x80/cccccc/ffffff&text=No+Image';
+                                (e.target as HTMLImageElement).src =
+                                  "https://dummyimage.com/80x80/cccccc/ffffff&text=No+Image";
                               }}
                             />
                           </div>
@@ -282,29 +377,26 @@ const FoodManagement: React.FC = () => {
                         <TableCell>
                           <div className="action-buttons">
                             <Tooltip title="Xem chi tiết">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 color="primary"
-                                onClick={() => handleView(food)}
-                              >
+                                onClick={() => handleView(food)}>
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Chỉnh sửa">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 color="primary"
-                                onClick={() => handleEdit(food)}
-                              >
+                                onClick={() => handleEdit(food)}>
                                 <EditIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title="Xóa">
-                              <IconButton 
-                                size="small" 
+                              <IconButton
+                                size="small"
                                 color="error"
-                                onClick={() => handleDelete(food)}
-                              >
+                                onClick={() => handleDelete(food)}>
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
                             </Tooltip>
@@ -316,7 +408,7 @@ const FoodManagement: React.FC = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            
+
             <div className="pagination-container">
               <Pagination
                 count={Math.ceil(total / limit)}
@@ -330,9 +422,23 @@ const FoodManagement: React.FC = () => {
             </div>
           </>
         )}
+
+        {/* Thêm Snackbar để hiển thị thông báo */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </div>
     </Layout>
   );
 };
 
-export default FoodManagement; 
+export default FoodManagement;

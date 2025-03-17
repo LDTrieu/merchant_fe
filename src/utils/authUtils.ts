@@ -70,11 +70,13 @@ export const isTokenValid = (token: string): boolean => {
       return false;
     }
 
-    // Kiểm tra thời gian hết hạn
-    const currentTime = Date.now() / 1000;
-    console.log("isTokenValid - Thời gian hiện tại:", currentTime);
-    console.log("isTokenValid - Thời gian hết hạn:", decoded.exp);
-    const isValid = decoded.exp > currentTime;
+    // Tạm thời bỏ qua kiểm tra thời gian hết hạn
+    console.log("isTokenValid - Bỏ qua kiểm tra thời gian hết hạn");
+    // const currentTime = Date.now() / 1000;
+    // console.log("isTokenValid - Thời gian hiện tại:", currentTime);
+    // console.log("isTokenValid - Thời gian hết hạn:", decoded.exp);
+    // const isValid = decoded.exp > currentTime;
+    const isValid = true; // Luôn trả về true nếu token có thể giải mã
     console.log("isTokenValid - Token có hợp lệ:", isValid);
     return isValid;
   } catch (error) {

@@ -152,11 +152,30 @@ const OrderCreate: React.FC = () => {
 
   // Xử lý xóa toàn bộ giỏ hàng
   const handleClearCart = () => {
+    // Gọi hàm clearCart từ service
     clearCart();
-    setCart(getCart());
-    showSnackbar("Đã làm mới giỏ hàng", "success");
-    // Tải lại danh sách món ăn để cập nhật UI
-    loadFoods();
+
+    // Cập nhật lại state cart với giỏ hàng trống mới
+    // Sử dụng cách này thay vì setCart(getCart()) để đảm bảo React nhận ra sự thay đổi
+    setCart({
+      items: [],
+      totalAmount: 0,
+      discount: 0,
+      finalAmount: 0,
+    });
+
+    // Hiển thị thông báo
+    showSnackbar("Đã xóa tất cả món trong giỏ hàng", "success");
+
+    // Force re-render component để đảm bảo UI được cập nhật
+    setTimeout(() => {
+      setCart({
+        items: [],
+        totalAmount: 0,
+        discount: 0,
+        finalAmount: 0,
+      });
+    }, 0);
   };
 
   // Xử lý cập nhật giảm giá
@@ -345,16 +364,6 @@ const OrderCreate: React.FC = () => {
               <Typography variant="h5" component="h1">
                 Đặt món
               </Typography>
-              {cart.items.length > 0 && (
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={handleClearCart}
-                  startIcon={<RestartAltIcon />}
-                  size="small">
-                  Làm mới
-                </Button>
-              )}
             </div>
 
             {/* Thanh tìm kiếm */}
@@ -446,7 +455,19 @@ const OrderCreate: React.FC = () => {
 
         {/* Phần giỏ hàng */}
         <div className="cart-section">
-          <div className="cart-header">Giỏ hàng ({cart.items.length})</div>
+          <div className="cart-header">
+            Giỏ hàng ({cart.items.length})
+            {cart.items.length > 0 && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleClearCart}
+                startIcon={<RestartAltIcon />}
+                size="small">
+                Xóa tất cả
+              </Button>
+            )}
+          </div>
 
           {cart.items.length === 0 ? (
             <div className="empty-cart-message">

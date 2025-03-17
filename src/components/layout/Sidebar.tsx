@@ -41,17 +41,10 @@ const Sidebar = () => {
         </Link>
 
         <Link
-          to="/pos"
-          className={`sidebar-item ${isActive("/pos") ? "active" : ""}`}>
-          <i className="sidebar-icon">🧾</i>
-          <span>Bán hàng (POS)</span>
-        </Link>
-
-        <Link
           to="/orders"
           className={`sidebar-item ${isActive("/orders") ? "active" : ""}`}>
           <i className="sidebar-icon">📋</i>
-          <span>Đơn hàng</span>
+          <span>Đặt món</span>
         </Link>
 
         <Link

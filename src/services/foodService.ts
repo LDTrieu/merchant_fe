@@ -1,362 +1,385 @@
-import { Food, FoodFilter, FoodListResponse } from '../models/Food';
+import { Food, FoodFilter, FoodListResponse } from "../models/Food";
 
-// Dữ liệu mẫu cho món ăn và đồ uống từ The Coffee House
-const mockFoods: Food[] = [
-  // Cà Phê Việt Nam
-  {
-    id: '1',
-    name: 'The Coffee House Sữa Đá',
-    sku: 'CF001',
-    price: 39000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Việt Nam',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Cà phê sữa đá truyền thống của The Coffee House với hương vị đậm đà, hài hòa giữa vị đắng cà phê và vị ngọt của sữa.',
-    createdAt: '2023-01-15T08:30:00Z',
-    updatedAt: '2023-05-20T10:15:00Z'
-  },
-  {
-    id: '2',
-    name: 'Cà Phê Đen Đá',
-    sku: 'CF002',
-    price: 29000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Việt Nam',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Cà phê đen đá mang hương vị mạnh mẽ, đậm đà của cà phê Việt Nam.',
-    createdAt: '2023-01-16T09:30:00Z',
-    updatedAt: '2023-05-21T11:15:00Z'
-  },
-  {
-    id: '3',
-    name: 'Bạc Xỉu',
-    sku: 'CF003',
-    price: 29000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Việt Nam',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Bạc xỉu là cà phê sữa với nhiều sữa hơn cà phê, vị ngọt dịu.',
-    createdAt: '2023-01-17T10:30:00Z',
-    updatedAt: '2023-05-22T12:15:00Z'
-  },
-  {
-    id: '4',
-    name: 'Đường Đen Sữa Đá',
-    sku: 'CF004',
-    price: 45000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Việt Nam',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Cà phê đường đen sữa đá với vị đường đen đặc trưng, ngọt thơm và béo ngậy.',
-    createdAt: '2023-01-18T11:30:00Z',
-    updatedAt: '2023-05-23T13:15:00Z'
-  },
-  {
-    id: '5',
-    name: 'Cà Phê Sữa Nóng',
-    sku: 'CF005',
-    price: 39000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Việt Nam',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Cà phê sữa nóng thơm ngon, phù hợp cho những ngày se lạnh.',
-    createdAt: '2023-01-19T12:30:00Z',
-    updatedAt: '2023-05-24T14:15:00Z'
-  },
-  
-  // Cà Phê Máy
-  {
-    id: '6',
-    name: 'Americano Đá',
-    sku: 'CFM001',
-    price: 49000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Máy',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Americano đá với hương vị cà phê espresso thơm ngon, hòa quyện với đá.',
-    createdAt: '2023-01-20T13:30:00Z',
-    updatedAt: '2023-05-25T15:15:00Z'
-  },
-  {
-    id: '7',
-    name: 'Latte Đá',
-    sku: 'CFM002',
-    price: 55000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Máy',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Latte đá với lớp sữa mịn màng hòa quyện cùng cà phê espresso đậm đà.',
-    createdAt: '2023-01-21T14:30:00Z',
-    updatedAt: '2023-05-26T16:15:00Z'
-  },
-  {
-    id: '8',
-    name: 'Cappuccino Đá',
-    sku: 'CFM003',
-    price: 55000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Máy',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Cappuccino đá với lớp bọt sữa dày, xốp và cà phê espresso.',
-    createdAt: '2023-01-22T15:30:00Z',
-    updatedAt: '2023-05-27T17:15:00Z'
-  },
-  {
-    id: '9',
-    name: 'Caramel Macchiato Đá',
-    sku: 'CFM004',
-    price: 55000,
-    status: 'ACTIVE',
-    category: 'Cà Phê Máy',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Caramel Macchiato đá với vị caramel ngọt ngào, sữa và cà phê espresso.',
-    createdAt: '2023-01-23T16:30:00Z',
-    updatedAt: '2023-05-28T18:15:00Z'
-  },
-  
-  // Trà Trái Cây
-  {
-    id: '10',
-    name: 'Hi-Tea Đào',
-    sku: 'TR001',
-    price: 49000,
-    status: 'ACTIVE',
-    category: 'Trà Trái Cây',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Hi-Tea Đào với hương vị đào thơm ngọt, kết hợp với trà.',
-    createdAt: '2023-01-24T17:30:00Z',
-    updatedAt: '2023-05-29T19:15:00Z'
-  },
-  {
-    id: '11',
-    name: 'Hi-Tea Vải',
-    sku: 'TR002',
-    price: 49000,
-    status: 'ACTIVE',
-    category: 'Trà Trái Cây',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Hi-Tea Vải với hương vị vải thơm ngọt, kết hợp với trà.',
-    createdAt: '2023-01-25T18:30:00Z',
-    updatedAt: '2023-05-30T20:15:00Z'
-  },
-  {
-    id: '12',
-    name: 'Oolong Tứ Quý Vải',
-    sku: 'TR003',
-    price: 49000,
-    status: 'ACTIVE',
-    category: 'Trà Trái Cây',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Trà Oolong Tứ Quý kết hợp với vải, tạo nên hương vị thơm ngon đặc biệt.',
-    createdAt: '2023-01-26T19:30:00Z',
-    updatedAt: '2023-05-31T21:15:00Z'
-  },
-  
-  // Trà Sữa
-  {
-    id: '13',
-    name: 'Hồng Trà Sữa Trân Châu',
-    sku: 'TS001',
-    price: 55000,
-    status: 'ACTIVE',
-    category: 'Trà Sữa',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Hồng trà sữa với trân châu đường đen dai ngon.',
-    createdAt: '2023-01-27T20:30:00Z',
-    updatedAt: '2023-06-01T22:15:00Z'
-  },
-  {
-    id: '14',
-    name: 'Trà Sữa Oolong Nướng Sương Sáo',
-    sku: 'TS002',
-    price: 55000,
-    status: 'ACTIVE',
-    category: 'Trà Sữa',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Trà sữa oolong nướng với sương sáo dai giòn, thơm ngon.',
-    createdAt: '2023-01-28T21:30:00Z',
-    updatedAt: '2023-06-02T23:15:00Z'
-  },
-  
-  // Bánh ngọt
-  {
-    id: '15',
-    name: 'Mousse Tiramisu',
-    sku: 'BK001',
-    price: 35000,
-    status: 'ACTIVE',
-    category: 'Bánh ngọt',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Bánh mousse tiramisu với hương vị cà phê đặc trưng.',
-    createdAt: '2023-01-29T22:30:00Z',
-    updatedAt: '2023-06-03T00:15:00Z'
-  },
-  {
-    id: '16',
-    name: 'Mousse Gấu Chocolate',
-    sku: 'BK002',
-    price: 39000,
-    status: 'ACTIVE',
-    category: 'Bánh ngọt',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Bánh mousse chocolate hình gấu dễ thương và thơm ngon.',
-    createdAt: '2023-01-30T23:30:00Z',
-    updatedAt: '2023-06-04T01:15:00Z'
-  },
-  
-  // Bánh mặn
-  {
-    id: '17',
-    name: 'Chà Bông Phô Mai',
-    sku: 'BM001',
-    price: 39000,
-    status: 'ACTIVE',
-    category: 'Bánh mặn',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Bánh mì chà bông phô mai thơm ngon, giòn xốp.',
-    createdAt: '2023-01-31T00:30:00Z',
-    updatedAt: '2023-06-05T02:15:00Z'
-  },
-  {
-    id: '18',
-    name: 'Croissant Trứng Muối',
-    sku: 'BM002',
-    price: 39000,
-    status: 'ACTIVE',
-    category: 'Bánh mặn',
-    image: 'https://product.hstatic.net/1000075078/product/1737357037_tch-sua-da_5802e6e0dcb14c76b36bb45333996d33.png',
-    description: 'Bánh croissant giòn xốp kết hợp với trứng muối béo ngậy.',
-    createdAt: '2023-02-01T01:30:00Z',
-    updatedAt: '2023-06-06T03:15:00Z'
-  }
+// API URL
+const API_URL = "http://localhost:8080/api";
+
+// Danh sách các danh mục món ăn
+export const foodCategories = [
+  "Cà Phê Việt Nam",
+  "Cà Phê Máy",
+  "Cold Brew",
+  "Trà",
+  "Trà Sữa",
+  "CloudTea",
+  "CloudFee",
+  "Hi-Tea",
+  "Bánh ngọt",
+  "Bánh mặn",
+  "Snack",
 ];
 
-// Danh sách các loại món ăn
-export const foodCategories = [
-  'Cà Phê Việt Nam',
-  'Cà Phê Máy',
-  'Trà Trái Cây',
-  'Trà Sữa',
-  'Bánh ngọt',
-  'Bánh mặn'
+// Danh sách trạng thái món ăn
+export const foodStatuses = [
+  { value: "ACTIVE", label: "Đang bán" },
+  { value: "OUT_OF_STOCK", label: "Hết hàng" },
+  { value: "INACTIVE", label: "Ngừng bán" },
 ];
 
 // Danh sách các thương hiệu
 export const foodBrands = [
-  'Nhà hàng A',
-  'Nhà hàng B',
-  'Tiệm bánh C',
-  'Nhà hàng D',
-  'Quán cà phê E'
+  "Nhà hàng A",
+  "Nhà hàng B",
+  "Tiệm bánh C",
+  "Nhà hàng D",
+  "Quán cà phê E",
 ];
 
 // Danh sách các loại
-export const foodTypes = [
-  'NORMAL',
-  'MATERIAL'
-];
+export const foodTypes = ["NORMAL", "MATERIAL"];
 
 // Hàm lấy danh sách món ăn với phân trang và lọc
 export const getFoods = async (
   page: number = 1,
   limit: number = 10,
   filter: FoodFilter = {}
-): Promise<FoodListResponse> => {
-  // Giả lập độ trễ của API
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  let filteredFoods = [...mockFoods];
-  
-  // Áp dụng bộ lọc
-  if (filter.search) {
-    const searchLower = filter.search.toLowerCase();
-    filteredFoods = filteredFoods.filter(food => 
-      food.name.toLowerCase().includes(searchLower) || 
-      food.sku.toLowerCase().includes(searchLower) ||
-      (food.description && food.description.toLowerCase().includes(searchLower))
-    );
+): Promise<{
+  success: boolean;
+  data: Food[];
+  total: number;
+  page: number;
+  limit: number;
+  message?: string;
+}> => {
+  try {
+    // Xây dựng query params
+    const params = new URLSearchParams();
+    params.append("page", page.toString());
+    params.append("size", limit.toString());
+
+    if (filter.search) {
+      params.append("search", filter.search);
+    }
+
+    if (filter.category) {
+      params.append("category", filter.category);
+    }
+
+    if (filter.status) {
+      params.append("status", filter.status);
+    }
+
+    // Gọi API
+    const response = await fetch(`${API_URL}/food?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error("Không thể lấy danh sách món ăn");
+    }
+
+    const result = await response.json();
+
+    // Kiểm tra xem có dữ liệu không
+    if (
+      !result.res ||
+      !result.res.foods ||
+      !Array.isArray(result.res.foods) ||
+      result.res.foods.length === 0
+    ) {
+      return {
+        success: true,
+        data: [],
+        total: 0,
+        page,
+        limit,
+      };
+    }
+
+    // Chuyển đổi dữ liệu từ API sang định dạng Food
+    const foods: Food[] = result.res.foods
+      .map((item: any) => {
+        // Kiểm tra các trường bắt buộc
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+
+        // Kiểm tra nếu tên món ăn có chứa "Món ăn" thì bỏ qua
+        if (item.name && item.name.includes("Món ăn")) {
+          return null;
+        }
+
+        // Kiểm tra và đảm bảo các trường có giá trị hợp lệ
+        const name = item.name || "";
+        const sku = item.sku || "";
+        const price = typeof item.price === "number" ? item.price : 0;
+        const category = item.category || "";
+        const image =
+          item.image || "https://via.placeholder.com/150?text=No+Image";
+
+        return {
+          id: (item.id || "0").toString(),
+          name,
+          sku,
+          price,
+          status: item.is_available ? "ACTIVE" : "INACTIVE",
+          category,
+          image,
+          description: item.description || "",
+          createdAt: item.created_at || new Date().toISOString(),
+          updatedAt: item.updated_at || new Date().toISOString(),
+        };
+      })
+      .filter(Boolean); // Lọc bỏ các giá trị null
+
+    // Nếu sau khi lọc không còn món ăn nào, trả về mảng rỗng
+    if (foods.length === 0) {
+      return {
+        success: true,
+        data: [],
+        total: 0,
+        page,
+        limit,
+      };
+    }
+
+    return {
+      success: true,
+      data: foods,
+      total: result.res.pagination?.total || foods.length,
+      page,
+      limit,
+    };
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách món ăn:", error);
+    return {
+      success: false,
+      data: [],
+      total: 0,
+      page,
+      limit,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi khi lấy danh sách món ăn",
+    };
   }
-  
-  if (filter.category) {
-    filteredFoods = filteredFoods.filter(food => food.category === filter.category);
-  }
-  
-  if (filter.status) {
-    filteredFoods = filteredFoods.filter(food => food.status === filter.status);
-  }
-  
-  // Tính toán phân trang
-  const total = filteredFoods.length;
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedFoods = filteredFoods.slice(startIndex, endIndex);
-  
-  return {
-    data: paginatedFoods,
-    total,
-    page,
-    limit
-  };
 };
 
 // Hàm lấy thông tin chi tiết món ăn theo ID
 export const getFoodById = async (id: string): Promise<Food | null> => {
-  // Giả lập độ trễ của API
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  const food = mockFoods.find(food => food.id === id);
-  return food || null;
+  try {
+    const response = await fetch(`${API_URL}/food/${id}`);
+
+    if (!response.ok) {
+      throw new Error("Không thể lấy thông tin món ăn");
+    }
+
+    const result = await response.json();
+
+    if (!result.res) {
+      return null;
+    }
+
+    // Chuyển đổi dữ liệu từ API sang định dạng Food
+    const food: Food = {
+      id: result.res.id.toString(),
+      name: result.res.name,
+      sku: result.res.sku,
+      price: result.res.price,
+      status: result.res.is_available ? "ACTIVE" : "INACTIVE",
+      category: result.res.category,
+      image: result.res.image,
+      description: result.res.description,
+      createdAt: result.res.created_at,
+      updatedAt: result.res.updated_at,
+    };
+
+    return food;
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin món ăn:", error);
+    return null;
+  }
 };
 
 // Hàm tạo món ăn mới
-export const createFood = async (foodData: Omit<Food, 'id' | 'createdAt' | 'updatedAt'>): Promise<Food> => {
-  // Giả lập độ trễ của API
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const newFood: Food = {
-    ...foodData,
-    id: Math.random().toString(36).substr(2, 9),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  // Trong thực tế, đây sẽ là API call để tạo món ăn mới
-  mockFoods.push(newFood);
-  
-  return newFood;
+export const createFood = async (
+  foodData: Omit<Food, "id" | "createdAt" | "updatedAt">
+): Promise<Food> => {
+  try {
+    // Chuyển đổi dữ liệu từ Food sang định dạng API
+    const apiData = {
+      name: foodData.name,
+      sku: foodData.sku,
+      price: foodData.price,
+      is_available: foodData.status === "ACTIVE",
+      category: foodData.category,
+      image: foodData.image,
+      description: foodData.description || "",
+    };
+
+    const response = await fetch(`${API_URL}/food`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+      body: JSON.stringify(apiData),
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể tạo món ăn mới");
+    }
+
+    const result = await response.json();
+
+    // Chuyển đổi dữ liệu từ API sang định dạng Food
+    const newFood: Food = {
+      id: result.res.id.toString(),
+      name: result.res.name,
+      sku: result.res.sku,
+      price: result.res.price,
+      status: result.res.is_available ? "ACTIVE" : "INACTIVE",
+      category: result.res.category,
+      image: result.res.image,
+      description: result.res.description,
+      createdAt: result.res.created_at,
+      updatedAt: result.res.updated_at,
+    };
+
+    return newFood;
+  } catch (error) {
+    console.error("Lỗi khi tạo món ăn mới:", error);
+    throw error;
+  }
 };
 
-// Hàm cập nhật thông tin món ăn
-export const updateFood = async (id: string, foodData: Partial<Food>): Promise<Food | null> => {
-  // Giả lập độ trễ của API
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  const foodIndex = mockFoods.findIndex(food => food.id === id);
-  if (foodIndex === -1) return null;
-  
-  // Cập nhật thông tin món ăn
-  const updatedFood: Food = {
-    ...mockFoods[foodIndex],
-    ...foodData,
-    updatedAt: new Date().toISOString()
-  };
-  
-  // Trong thực tế, đây sẽ là API call để cập nhật món ăn
-  mockFoods[foodIndex] = updatedFood;
-  
-  return updatedFood;
+// Hàm cập nhật món ăn
+export const updateFood = async (
+  id: string,
+  foodData: Partial<Omit<Food, "id" | "createdAt" | "updatedAt">>
+): Promise<Food> => {
+  try {
+    // Chuyển đổi dữ liệu từ Food sang định dạng API
+    const apiData: any = {};
+
+    if (foodData.name !== undefined) apiData.name = foodData.name;
+    if (foodData.sku !== undefined) apiData.sku = foodData.sku;
+    if (foodData.price !== undefined) apiData.price = foodData.price;
+    if (foodData.status !== undefined)
+      apiData.is_available = foodData.status === "ACTIVE";
+    if (foodData.category !== undefined) apiData.category = foodData.category;
+    if (foodData.image !== undefined) apiData.image = foodData.image;
+    if (foodData.description !== undefined)
+      apiData.description = foodData.description;
+
+    const response = await fetch(`${API_URL}/food/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+      body: JSON.stringify(apiData),
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể cập nhật món ăn");
+    }
+
+    const result = await response.json();
+
+    // Chuyển đổi dữ liệu từ API sang định dạng Food
+    const updatedFood: Food = {
+      id: result.res.id.toString(),
+      name: result.res.name,
+      sku: result.res.sku,
+      price: result.res.price,
+      status: result.res.is_available ? "ACTIVE" : "INACTIVE",
+      category: result.res.category,
+      image: result.res.image,
+      description: result.res.description,
+      createdAt: result.res.created_at,
+      updatedAt: result.res.updated_at,
+    };
+
+    return updatedFood;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật món ăn:", error);
+    throw error;
+  }
 };
 
 // Hàm xóa món ăn
 export const deleteFood = async (id: string): Promise<boolean> => {
-  // Giả lập độ trễ của API
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const foodIndex = mockFoods.findIndex(food => food.id === id);
-  if (foodIndex === -1) return false;
-  
-  // Trong thực tế, đây sẽ là API call để xóa món ăn
-  mockFoods.splice(foodIndex, 1);
-  
-  return true;
-}; 
+  try {
+    const response = await fetch(`${API_URL}/food/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể xóa món ăn");
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Lỗi khi xóa món ăn:", error);
+    return false;
+  }
+};
+
+// Hàm xuất dữ liệu món ăn
+export const exportFoods = async (): Promise<Blob> => {
+  try {
+    const response = await fetch(`${API_URL}/food/export`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Không thể xuất dữ liệu món ăn");
+    }
+
+    return await response.blob();
+  } catch (error) {
+    console.error("Lỗi khi xuất dữ liệu món ăn:", error);
+    throw error;
+  }
+};
+
+// Hàm gửi dữ liệu mock về backend
+export const sendMockFoodsToBackend = async (): Promise<{
+  success: boolean;
+  message: string;
+}> => {
+  try {
+    const response = await fetch(`${API_URL}/food/import-mock`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Không thể gửi dữ liệu mock về BE");
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      message: data.message || "Đã gửi dữ liệu mock thành công",
+    };
+  } catch (error) {
+    console.error("Lỗi khi gửi dữ liệu mock:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Đã xảy ra lỗi khi gửi dữ liệu mock",
+    };
+  }
+};

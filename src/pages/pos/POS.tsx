@@ -48,8 +48,8 @@ import {
   getCart,
   clearCart,
   updateDiscount,
-  createOrderFromCart,
 } from "../../services/cartService";
+import { createOrder } from "../../services/orderService";
 import { generateCartPDF } from "../../services/pdfService";
 import "../../styles/POS.css";
 
@@ -64,13 +64,13 @@ const POS: React.FC = () => {
   // State cho giỏ hàng
   const [cart, setCart] = useState<Cart>(getCart());
 
-  // State cho dialog thanh toán
-  const [openOrderDialog, setOpenOrderDialog] = useState<boolean>(false);
+  // State cho dialog đặt hàng
+  const [orderDialogOpen, setOrderDialogOpen] = useState<boolean>(false);
   const [orderForm, setOrderForm] = useState<OrderForm>({
     customerName: "",
     customerPhone: "",
-    paymentMethod: "CASH",
     note: "",
+    paymentMethod: "CASH",
   });
   const [orderLoading, setOrderLoading] = useState<boolean>(false);
 
@@ -138,7 +138,6 @@ const POS: React.FC = () => {
   const handleAddToCart = (food: Food) => {
     const updatedCart = addToCart(food);
     setCart(updatedCart);
-    showSnackbar(`Đã thêm ${food.name} vào giỏ hàng`, "success");
   };
 
   // Xử lý tăng số lượng món trong giỏ hàng
@@ -153,11 +152,14 @@ const POS: React.FC = () => {
   // Xử lý giảm số lượng món trong giỏ hàng
   const handleDecreaseQuantity = (itemId: string) => {
     const item = cart.items.find((item) => item.id === itemId);
-    if (item && item.quantity > 1) {
-      const updatedCart = updateCartItemQuantity(itemId, item.quantity - 1);
-      setCart(updatedCart);
-    } else if (item && item.quantity === 1) {
-      handleRemoveFromCart(itemId);
+    if (item) {
+      if (item.quantity > 1) {
+        const updatedCart = updateCartItemQuantity(itemId, item.quantity - 1);
+        setCart(updatedCart);
+      } else {
+        const updatedCart = removeFromCart(itemId);
+        setCart(updatedCart);
+      }
     }
   };
 
@@ -169,85 +171,80 @@ const POS: React.FC = () => {
 
   // Xử lý xóa toàn bộ giỏ hàng
   const handleClearCart = () => {
-    const updatedCart = clearCart();
-    setCart(updatedCart);
-    showSnackbar("Đã xóa toàn bộ giỏ hàng", "success");
+    if (window.confirm("Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng?")) {
+      const updatedCart = clearCart();
+      setCart(updatedCart);
+    }
   };
 
   // Xử lý thay đổi giảm giá
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const discount = parseFloat(e.target.value) || 0;
-    const updatedCart = updateDiscount(discount);
+    const value = parseFloat(e.target.value) || 0;
+    const updatedCart = updateDiscount(value);
     setCart(updatedCart);
   };
 
-  // Mở dialog thanh toán
+  // Xử lý mở dialog đặt hàng
   const handleOpenOrderDialog = () => {
     if (cart.items.length === 0) {
-      showSnackbar("Giỏ hàng trống, vui lòng thêm món ăn", "error");
+      showSnackbar(
+        "Giỏ hàng trống. Vui lòng thêm món ăn vào giỏ hàng.",
+        "error"
+      );
       return;
     }
-    setOpenOrderDialog(true);
+    setOrderDialogOpen(true);
   };
 
-  // Đóng dialog thanh toán
+  // Xử lý đóng dialog đặt hàng
   const handleCloseOrderDialog = () => {
-    setOpenOrderDialog(false);
+    setOrderDialogOpen(false);
   };
 
-  // Xử lý thay đổi form thanh toán
+  // Xử lý thay đổi form đặt hàng
   const handleOrderFormChange = (
     e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
   ) => {
     const { name, value } = e.target;
-    setOrderForm({
-      ...orderForm,
-      [name as string]: value,
-    });
+    if (name) {
+      setOrderForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
-  // Xử lý chọn phương thức thanh toán
+  // Xử lý thay đổi phương thức thanh toán
   const handlePaymentMethodChange = (method: PaymentMethod) => {
-    setOrderForm({
-      ...orderForm,
+    setOrderForm((prev) => ({
+      ...prev,
       paymentMethod: method,
-    });
+    }));
   };
 
   // Xử lý tạo đơn hàng
   const handleCreateOrder = async () => {
     setOrderLoading(true);
     try {
-      const response = await createOrderFromCart({
+      const result = await createOrder({
         ...orderForm,
         items: cart.items,
+        totalAmount: cart.totalAmount,
+        discount: cart.discount,
       });
 
-      if (response.success) {
-        // Tạo và tải xuống hóa đơn PDF
-        await generateCartPDF(cart, orderForm, response.data.orderNumber);
-
-        // Xóa giỏ hàng sau khi tạo đơn hàng thành công
+      if (result.success) {
+        showSnackbar("Đặt hàng thành công!", "success");
+        setOrderDialogOpen(false);
+        // Xóa giỏ hàng sau khi đặt hàng thành công
         const updatedCart = clearCart();
         setCart(updatedCart);
-
-        // Đóng dialog và hiển thị thông báo thành công
-        setOpenOrderDialog(false);
-        showSnackbar("Đơn hàng đã được tạo thành công", "success");
-
-        // Reset form
-        setOrderForm({
-          customerName: "",
-          customerPhone: "",
-          paymentMethod: "CASH",
-          note: "",
-        });
       } else {
-        showSnackbar(response.message || "Không thể tạo đơn hàng", "error");
+        showSnackbar(result.message || "Đặt hàng thất bại!", "error");
       }
     } catch (error) {
-      showSnackbar("Đã xảy ra lỗi khi tạo đơn hàng", "error");
       console.error("Error creating order:", error);
+      showSnackbar("Đã xảy ra lỗi khi đặt hàng!", "error");
     } finally {
       setOrderLoading(false);
     }
@@ -264,17 +261,18 @@ const POS: React.FC = () => {
 
   // Đóng thông báo
   const handleCloseSnackbar = () => {
-    setSnackbar({
-      ...snackbar,
+    setSnackbar((prev) => ({
+      ...prev,
       open: false,
-    });
+    }));
   };
 
-  // Format giá tiền
+  // Định dạng giá tiền
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
+      minimumFractionDigits: 0,
     }).format(price);
   };
 
@@ -283,13 +281,17 @@ const POS: React.FC = () => {
     switch (category) {
       case "Cà Phê Việt Nam":
       case "Cà Phê Máy":
+      case "Cold Brew":
         return <LocalCafeIcon />;
       case "Trà":
-      case "Trà Trái Cây":
+      case "Trà Sữa":
+      case "CloudTea":
+      case "Hi-Tea":
         return <LocalBarIcon />;
-      case "Bánh Ngọt":
+      case "Bánh ngọt":
         return <CakeIcon />;
-      case "Đồ Ăn Nhẹ":
+      case "Bánh mặn":
+      case "Snack":
         return <FastfoodIcon />;
       default:
         return <RestaurantIcon />;
@@ -344,6 +346,10 @@ const POS: React.FC = () => {
             <Typography color="error" align="center">
               {error}
             </Typography>
+          ) : filteredFoods.length === 0 ? (
+            <Typography align="center" sx={{ p: 3 }}>
+              Không tìm thấy món ăn nào. Vui lòng thử lại sau.
+            </Typography>
           ) : (
             <div className="pos-food-grid">
               {filteredFoods.map((food) => (
@@ -354,18 +360,26 @@ const POS: React.FC = () => {
                   <CardMedia
                     component="img"
                     className="pos-food-image"
-                    image={food.image}
+                    image={
+                      food.image ||
+                      "https://via.placeholder.com/150?text=No+Image"
+                    }
                     alt={food.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src =
+                        "https://via.placeholder.com/150?text=No+Image";
+                    }}
                   />
                   <CardContent className="pos-food-content">
                     <Typography variant="subtitle1" component="div" noWrap>
-                      {food.name}
+                      {food.name || "Không có tên"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" noWrap>
-                      {food.category}
+                      {food.category || "Không phân loại"}
                     </Typography>
                     <Typography className="pos-food-price">
-                      {formatPrice(food.price)}
+                      {formatPrice(food.price || 0)}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -388,100 +402,109 @@ const POS: React.FC = () => {
 
           {cart.items.length === 0 ? (
             <div className="pos-empty-cart">
-              <ShoppingCartIcon className="pos-empty-cart-icon" />
-              <Typography variant="body1">Giỏ hàng trống</Typography>
-              <Typography variant="body2">
+              <ShoppingCartIcon sx={{ fontSize: 60, color: "text.disabled" }} />
+              <Typography variant="body1" color="text.secondary">
+                Giỏ hàng trống
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 Vui lòng chọn món ăn để thêm vào giỏ hàng
               </Typography>
             </div>
           ) : (
-            <>
-              <div className="pos-cart-items">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="pos-cart-item">
-                    <div className="pos-cart-item-details">
-                      <Typography className="pos-cart-item-name">
-                        {item.name}
-                      </Typography>
-                      <Typography className="pos-cart-item-price">
-                        {formatPrice(item.price)} x {item.quantity} ={" "}
-                        {formatPrice(item.price * item.quantity)}
-                      </Typography>
-                    </div>
-                    <div className="pos-cart-item-actions">
-                      <div className="pos-quantity-control">
-                        <IconButton
-                          size="small"
-                          onClick={() => handleDecreaseQuantity(item.id)}>
-                          <RemoveIcon fontSize="small" />
-                        </IconButton>
-                        <span className="pos-quantity">{item.quantity}</span>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleIncreaseQuantity(item.id)}>
-                          <AddIcon fontSize="small" />
-                        </IconButton>
-                      </div>
+            <div className="pos-cart-items">
+              {cart.items.map((item) => (
+                <div key={item.id} className="pos-cart-item">
+                  <div className="pos-cart-item-info">
+                    <Typography variant="body1">{item.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {formatPrice(item.price)} x {item.quantity}
+                    </Typography>
+                  </div>
+                  <div className="pos-cart-item-actions">
+                    <Typography
+                      variant="body1"
+                      className="pos-cart-item-subtotal">
+                      {formatPrice(item.subtotal)}
+                    </Typography>
+                    <div className="pos-cart-item-quantity">
                       <IconButton
                         size="small"
-                        color="error"
-                        onClick={() => handleRemoveFromCart(item.id)}>
-                        <DeleteIcon fontSize="small" />
+                        onClick={() => handleDecreaseQuantity(item.id)}>
+                        <RemoveIcon fontSize="small" />
+                      </IconButton>
+                      <Typography variant="body2">{item.quantity}</Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleIncreaseQuantity(item.id)}>
+                        <AddIcon fontSize="small" />
                       </IconButton>
                     </div>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleRemoveFromCart(item.id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </div>
-                ))}
-              </div>
-
-              <div className="pos-cart-summary">
-                <div className="pos-summary-row">
-                  <Typography>Tổng tiền hàng:</Typography>
-                  <Typography>{formatPrice(cart.totalAmount)}</Typography>
                 </div>
-
-                <div className="pos-summary-row">
-                  <TextField
-                    label="Giảm giá"
-                    type="number"
-                    size="small"
-                    value={cart.discount || ""}
-                    onChange={handleDiscountChange}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">VND</InputAdornment>
-                      ),
-                    }}
-                  />
-                  <Typography>{formatPrice(cart.discount || 0)}</Typography>
-                </div>
-
-                <Divider />
-
-                <div className="pos-total-row">
-                  <Typography>Tổng thanh toán:</Typography>
-                  <Typography>{formatPrice(cart.finalAmount)}</Typography>
-                </div>
-
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  size="large"
-                  className="pos-checkout-button"
-                  onClick={handleOpenOrderDialog}
-                  startIcon={<ReceiptIcon />}>
-                  Thanh toán
-                </Button>
-              </div>
-            </>
+              ))}
+            </div>
           )}
+
+          <Divider sx={{ my: 2 }} />
+
+          <div className="pos-cart-summary">
+            <div className="pos-cart-summary-row">
+              <Typography variant="body1">Tạm tính</Typography>
+              <Typography variant="body1">
+                {formatPrice(cart.subtotal)}
+              </Typography>
+            </div>
+            <div className="pos-cart-summary-row">
+              <Typography variant="body1">Giảm giá</Typography>
+              <TextField
+                type="number"
+                size="small"
+                value={cart.discount}
+                onChange={handleDiscountChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">VND</InputAdornment>
+                  ),
+                }}
+                sx={{ width: "120px" }}
+              />
+            </div>
+            <div className="pos-cart-summary-row">
+              <Typography variant="h6">Tổng cộng</Typography>
+              <Typography variant="h6" color="primary">
+                {formatPrice(cart.totalAmount)}
+              </Typography>
+            </div>
+          </div>
+
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            size="large"
+            startIcon={<ReceiptIcon />}
+            onClick={handleOpenOrderDialog}
+            disabled={cart.items.length === 0}
+            sx={{ mt: 2 }}>
+            Đặt hàng
+          </Button>
         </div>
       </div>
 
-      {/* Dialog thanh toán */}
-      <Dialog open={openOrderDialog} onClose={handleCloseOrderDialog}>
-        <DialogTitle>Hoàn tất đơn hàng</DialogTitle>
-        <DialogContent className="pos-dialog-content">
+      {/* Dialog đặt hàng */}
+      <Dialog
+        open={orderDialogOpen}
+        onClose={handleCloseOrderDialog}
+        maxWidth="sm"
+        fullWidth>
+        <DialogTitle>Thông tin đặt hàng</DialogTitle>
+        <DialogContent>
           <TextField
             margin="dense"
             label="Tên khách hàng"
@@ -494,60 +517,12 @@ const POS: React.FC = () => {
           <TextField
             margin="dense"
             label="Số điện thoại"
-            type="text"
+            type="tel"
             fullWidth
             name="customerPhone"
             value={orderForm.customerPhone}
             onChange={handleOrderFormChange}
           />
-
-          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-            Phương thức thanh toán
-          </Typography>
-
-          <div className="pos-payment-methods">
-            <Button
-              variant="outlined"
-              className={`pos-payment-method-button ${
-                orderForm.paymentMethod === "CASH" ? "active" : ""
-              }`}
-              onClick={() => handlePaymentMethodChange("CASH")}>
-              Tiền mặt
-            </Button>
-            <Button
-              variant="outlined"
-              className={`pos-payment-method-button ${
-                orderForm.paymentMethod === "CARD" ? "active" : ""
-              }`}
-              onClick={() => handlePaymentMethodChange("CARD")}>
-              Thẻ
-            </Button>
-            <Button
-              variant="outlined"
-              className={`pos-payment-method-button ${
-                orderForm.paymentMethod === "TRANSFER" ? "active" : ""
-              }`}
-              onClick={() => handlePaymentMethodChange("TRANSFER")}>
-              Chuyển khoản
-            </Button>
-            <Button
-              variant="outlined"
-              className={`pos-payment-method-button ${
-                orderForm.paymentMethod === "MOMO" ? "active" : ""
-              }`}
-              onClick={() => handlePaymentMethodChange("MOMO")}>
-              MoMo
-            </Button>
-            <Button
-              variant="outlined"
-              className={`pos-payment-method-button ${
-                orderForm.paymentMethod === "ZALOPAY" ? "active" : ""
-              }`}
-              onClick={() => handlePaymentMethodChange("ZALOPAY")}>
-              ZaloPay
-            </Button>
-          </div>
-
           <TextField
             margin="dense"
             label="Ghi chú"
@@ -560,14 +535,82 @@ const POS: React.FC = () => {
             onChange={handleOrderFormChange}
           />
 
-          <Typography variant="h6" sx={{ mt: 2 }}>
-            Tổng thanh toán: {formatPrice(cart.finalAmount)}
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Phương thức thanh toán
           </Typography>
+          <div className="pos-payment-methods">
+            <Button
+              variant={
+                orderForm.paymentMethod === "CASH" ? "contained" : "outlined"
+              }
+              onClick={() => handlePaymentMethodChange("CASH")}
+              sx={{ mr: 1 }}>
+              Tiền mặt
+            </Button>
+            <Button
+              variant={
+                orderForm.paymentMethod === "CARD" ? "contained" : "outlined"
+              }
+              onClick={() => handlePaymentMethodChange("CARD")}
+              sx={{ mr: 1 }}>
+              Thẻ
+            </Button>
+            <Button
+              variant={
+                orderForm.paymentMethod === "MOMO" ? "contained" : "outlined"
+              }
+              onClick={() => handlePaymentMethodChange("MOMO")}
+              sx={{ mr: 1 }}>
+              MoMo
+            </Button>
+            <Button
+              variant={
+                orderForm.paymentMethod === "TRANSFER"
+                  ? "contained"
+                  : "outlined"
+              }
+              onClick={() => handlePaymentMethodChange("TRANSFER")}>
+              Chuyển khoản
+            </Button>
+          </div>
+
+          <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+            Tóm tắt đơn hàng
+          </Typography>
+          <div className="pos-order-summary">
+            {cart.items.map((item) => (
+              <div key={item.id} className="pos-order-item">
+                <Typography variant="body2">
+                  {item.name} x {item.quantity}
+                </Typography>
+                <Typography variant="body2">
+                  {formatPrice(item.subtotal)}
+                </Typography>
+              </div>
+            ))}
+            <Divider sx={{ my: 1 }} />
+            <div className="pos-order-total">
+              <Typography variant="subtitle2">Tạm tính</Typography>
+              <Typography variant="subtitle2">
+                {formatPrice(cart.subtotal)}
+              </Typography>
+            </div>
+            <div className="pos-order-total">
+              <Typography variant="subtitle2">Giảm giá</Typography>
+              <Typography variant="subtitle2">
+                {formatPrice(cart.discount)}
+              </Typography>
+            </div>
+            <div className="pos-order-total">
+              <Typography variant="subtitle1">Tổng cộng</Typography>
+              <Typography variant="subtitle1" color="primary">
+                {formatPrice(cart.totalAmount)}
+              </Typography>
+            </div>
+          </div>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseOrderDialog} disabled={orderLoading}>
-            Hủy
-          </Button>
+          <Button onClick={handleCloseOrderDialog}>Hủy</Button>
           <Button
             onClick={handleCreateOrder}
             variant="contained"
@@ -584,7 +627,10 @@ const POS: React.FC = () => {
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
